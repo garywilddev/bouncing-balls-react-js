@@ -6,25 +6,38 @@ class CanvasComponent extends React.Component {
     this.canvasRef = React.createRef();
   }
 
+  resetCanvas(ctx, width, height) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = "#4397AC";
+  }
+
+  drawFrame(ctx, width, height) {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, height);
+    ctx.lineTo(width, height);
+    ctx.lineTo(width, 0);
+    ctx.lineTo(0, 0);
+    ctx.stroke();
+  }
+
+  drawBalls(ctx, balls) {
+    balls.forEach(({ rx, ry, r }) => {
+      ctx.beginPath();
+      ctx.arc(rx, ry, r, 0, 2 * Math.PI);
+      ctx.fill();
+    });
+  }
 
   componentWillUpdate() {
-    // Draws a square in the middle of the canvas rotated
-    // around the centre by this.props.angle
-    const { balls, angle } = this.props;
+    const { balls } = this.props;
     const canvas = this.canvasRef.current;
     const ctx = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
-    ctx.save();
-    ctx.beginPath();
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = "#4397AC";
-    balls.forEach(({ rx, ry, radius }) => {
-      ctx.beginPath();
-      ctx.arc(rx, ry, radius, 0, 2 * Math.PI);
-      ctx.fill();
-    });
-    ctx.restore();
+    this.resetCanvas(ctx, width, height);
+    this.drawFrame(ctx, width, height);
+    this.drawBalls(ctx, balls);
   }
 
   render() {
