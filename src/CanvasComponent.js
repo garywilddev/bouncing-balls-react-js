@@ -41,7 +41,8 @@ class CanvasComponent extends React.Component {
   }
 
   render() {
-    return <canvas width="600" height="600" ref={this.canvasRef} />;
+    const { width, height } = this.props;
+    return <canvas width={width} height={height} ref={this.canvasRef} />;
   }
 }
 export default CanvasComponent;

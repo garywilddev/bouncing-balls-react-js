@@ -43,10 +43,10 @@ class SimpleBoucingBallsAnimation extends React.Component {
       _ry,
       _vx = vx,
       _vy = vy;
-    if (rx + vx * dt < r || rx + vx * dt > 600 - r) {
+    if (rx + vx * dt < r || rx + vx * dt > width - r) {
       _vx = -vx;
     }
-    if (ry + vy * dt < r || ry + vy * dt > 600 - r) {
+    if (ry + vy * dt < r || ry + vy * dt > height - r) {
       _vy = -vy;
     }
     _rx = rx + vx * dt;
@@ -56,7 +56,9 @@ class SimpleBoucingBallsAnimation extends React.Component {
   }
 
   render() {
-    return <CanvasComponent balls={this.state.balls} />;
+    return (
+      <CanvasComponent width={width} height={height} balls={this.state.balls} />
+    );
   }
 }
 

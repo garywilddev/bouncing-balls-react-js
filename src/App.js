@@ -1,12 +1,12 @@
 import React from "react";
-import SimpleBoucingBallsAnimation from "./SimpleBoucingBallsAnimation";
+import ComplexBoucingBallsAnimation from "./ComplexBoucingBallsAnimation";
 import "./App.css";
 
 
 function App() {
   return (
     <div className="App">
-      <SimpleBoucingBallsAnimation />
+      <ComplexBoucingBallsAnimation />
     </div>
   );
 }
