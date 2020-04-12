@@ -2,11 +2,19 @@ import React from "react";
 import CanvasComponent from "./CanvasComponent";
 import MinPQ from "./MinPQ";
 
-const n = 1;
-const radius = 3;
-const width = 600;
-const height = 600;
+const n = 30;
+const radius = 0.05;
+const width = 1;
+const height = 1;
 const HZ = 0.5;
+const limit = 10000;
+
+function uniform(a, b) {
+  if (!(a < b)) {
+    throw new Error(`invalid range: [ ${a}, ${b} ]`);
+  }
+  return a + Math.random() * (b - a);
+}
 
 class ComplexBoucingBallsAnimation extends React.Component {
   constructor(props) {
@@ -37,18 +45,13 @@ class ComplexBoucingBallsAnimation extends React.Component {
     requestAnimationFrame(this.simulate);
   }
 
-  isValid({ countA, countB, particles }) {
-    const [a, b] = particles;
-    if (a == null && b == null) {
-      return true;
-    } else if (a != null && b != null) {
-      return countA === a.count && countB === b.count;
-    } else if (a != null && b == null) {
-      return countA === a.count;
-    } else if (a == null && b != null) {
-      return countB === b.count;
+  isValid({ countA, countB, particles: [a, b] }) {
+    if (a != null && countA !== this.particles[a.index].count) {
+      return false;
+    } else if (b != null && countB !== this.particles[b.index].count) {
+      return false;
     }
-    return false;
+    return true;
   }
 
   timeToHit(
@@ -104,13 +107,14 @@ class ComplexBoucingBallsAnimation extends React.Component {
     { m: m1, r: r1, rx: rx1, ry: ry1, vx: vx1, vy: vy1, count: count1 },
     { m: m2, r: r2, rx: rx2, ry: ry2, vx: vx2, vy: vy2, count: count2 }
   ) {
+    //debugger;
     const dx = rx2 - rx1;
     const dy = ry2 - ry1;
     const dvx = vx2 - vx1;
     const dvy = vy2 - vy1;
     const dvdr = dx * dvx + dy * dvy;
     const sigma = r1 + r2;
-    const J = (m1 * m2 * dvdr) / ((m1 + m2) * sigma);
+    const J = (2 * m1 * m2 * dvdr) / ((m1 + m2) * sigma);
     const Jx = (J * dx) / sigma;
     const Jy = (J * dy) / sigma;
 
@@ -145,37 +149,67 @@ class ComplexBoucingBallsAnimation extends React.Component {
     }
 
     this.particles.forEach(b => {
+      const t = this.t + this.timeToHit(a, b);
+      if (t <= limit) {
+        this.pq.insert({
+          t,
+          countA: a.count,
+          countB: b.count,
+          particles: [a, b]
+        });
+      }
+    });
+
+    const tVW = this.t + this.timeToHitVWall(a);
+    if (tVW < limit) {
       this.pq.insert({
-        t: this.t + this.timeToHit(a, b),
+        t: tVW,
         countA: a.count,
-        countB: b.count,
-        particles: [a, b]
+        particles: [a, null]
       });
-    });
+    }
 
-    this.pq.insert({
-      t: this.t + this.timeToHitVWall(a),
-      countA: a.count,
-      particles: [a, null]
-    });
-
-    this.pq.insert({
-      t: this.t + this.timeToHitHWall(a),
-      countB: a.count,
-      particles: [null, a]
-    });
+    const tHW = this.t + this.timeToHitHWall(a);
+    if (tHW < limit) {
+      this.pq.insert({
+        t: tHW,
+        countB: a.count,
+        particles: [null, a]
+      });
+    }
   }
 
   init() {
-    debugger;
+    /*this.particles = [
+      {
+        index: 0,
+        r: radius,
+        m: 0.5,
+        rx: width / 2,
+        ry: 0,
+        vx: 0,
+        vy: 0.002,
+        count: 0
+      },
+      {
+        index: 1,
+        r: radius,
+        m: 0.5,
+        rx: width / 2,
+        ry: height,
+        vx: 0,
+        vy: -0.002,
+        count: 0
+      }
+    ];*/
     this.particles = [...Array(n)].map((val, index) => ({
       index,
       r: radius,
-      m: 5,
-      rx: 300,
-      ry: 0,
-      vx: 1,
-      vy: 1,
+      m: 0.5,
+      rx: uniform(radius, width - radius),
+      ry: uniform(radius, height - radius),
+      vx: uniform(-0.005, 0.005),
+      vy: uniform(-0.005, 0.005),
       count: 0
     }));
     this.particles.forEach(particle => {
@@ -185,8 +219,19 @@ class ComplexBoucingBallsAnimation extends React.Component {
   }
 
   simulate() {
-    debugger;
+    /*console.log(
+      "size: ",
+      this.pq.size(),
+      "; content: ",
+      this.pq.toString(e => ({
+        time: e.t,
+        isValid: this.isValid(e),
+        a: e.particles[0],
+        b: e.particles[1]
+      }))
+    );*/
     const event = this.pq.delMin();
+    //console.log(JSON.stringify(event));
     if (event) {
       if (this.isValid(event)) {
         const {
@@ -202,9 +247,10 @@ class ComplexBoucingBallsAnimation extends React.Component {
         this.t = eventTime;
 
         if (a != null && b != null) {
-          const [_a, _b] = this.bounceOff(a, b);
+          //debugger;
           const oldA = this.particles[a.index];
           const oldB = this.particles[b.index];
+          const [_a, _b] = this.bounceOff(oldA, oldB);
           this.particles.splice(a.index, 1, {
             ...oldA,
             ..._a
@@ -215,11 +261,11 @@ class ComplexBoucingBallsAnimation extends React.Component {
           });
         } else if (a != null && b == null) {
           const oldA = this.particles[a.index];
-          const _a = this.bounceOffVWall(a);
+          const _a = this.bounceOffVWall(oldA);
           this.particles.splice(a.index, 1, { ...oldA, ..._a });
         } else if (a == null && b != null) {
           const oldB = this.particles[b.index];
-          const _b = this.bounceOffHWall(b);
+          const _b = this.bounceOffHWall(oldB);
           this.particles.splice(b.index, 1, { ...oldB, ..._b });
         } else if (a == null && b == null) {
           this.pq.insert({ t: this.t + 1 / HZ, particles: [null, null] });
@@ -236,10 +282,9 @@ class ComplexBoucingBallsAnimation extends React.Component {
         if (b != null) {
           this.predict(this.particles[b.index]);
         }
-
-        this.rAF = requestAnimationFrame(this.simulate);
       }
     }
+    this.rAF = requestAnimationFrame(this.simulate);
   }
 
   componentWillUnmount() {
@@ -249,11 +294,7 @@ class ComplexBoucingBallsAnimation extends React.Component {
 
   render() {
     return (
-      <CanvasComponent
-        width={width}
-        height={height}
-        balls={this.state.particles}
-      />
+      <CanvasComponent width={600} height={600} balls={this.state.particles} />
     );
   }
 }

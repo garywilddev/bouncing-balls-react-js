@@ -2,9 +2,17 @@ import React from "react";
 import CanvasComponent from "./CanvasComponent";
 
 const n = 100;
-const radius = 3;
-const width = 600;
-const height = 600;
+const radius = 0.03;
+const width = 1;
+const height = 1;
+
+function uniform(a, b) {
+  if (!(a < b)) {
+    throw new Error(`invalid range: [ ${a}, ${b} ]`);
+  }
+  return a + Math.random() * (b - a);
+}
+
 class SimpleBoucingBallsAnimation extends React.Component {
   constructor(props) {
     super(props);
@@ -12,10 +20,10 @@ class SimpleBoucingBallsAnimation extends React.Component {
       balls: [...Array(n)].map((val, index) => ({
         index,
         r: radius,
-        rx: radius + Math.random() * (width - 2 * radius),
-        ry: radius + Math.random() * (height - 2 * radius),
-        vx: (-(1 - Math.random()) + Math.random()) * 10,
-        vy: (-(1 - Math.random()) + Math.random()) * 8
+        rx: uniform(radius, width - radius),
+        ry: uniform(radius, height - radius),
+        vx: uniform(-0.005, 0.005),
+        vy: uniform(-0.005, 0.005)
       }))
     };
     this.updateAnimationState = this.updateAnimationState.bind(this);
@@ -57,7 +65,7 @@ class SimpleBoucingBallsAnimation extends React.Component {
 
   render() {
     return (
-      <CanvasComponent width={width} height={height} balls={this.state.balls} />
+      <CanvasComponent width={600} height={600} balls={this.state.balls} />
     );
   }
 }

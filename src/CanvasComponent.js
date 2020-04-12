@@ -21,10 +21,10 @@ class CanvasComponent extends React.Component {
     ctx.stroke();
   }
 
-  drawBalls(ctx, balls) {
+  drawBalls(ctx, balls, width, height) {
     balls.forEach(({ rx, ry, r }) => {
       ctx.beginPath();
-      ctx.arc(rx, ry, r, 0, 2 * Math.PI);
+      ctx.arc(rx * width, ry * height, r * width, 0, 2 * Math.PI);
       ctx.fill();
     });
   }
@@ -37,7 +37,7 @@ class CanvasComponent extends React.Component {
     const height = canvas.height;
     this.resetCanvas(ctx, width, height);
     this.drawFrame(ctx, width, height);
-    this.drawBalls(ctx, balls);
+    this.drawBalls(ctx, balls, width, height);
   }
 
   render() {

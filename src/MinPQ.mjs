@@ -72,10 +72,15 @@ function MinPQ(compare) {
     return N;
   }
 
+  function toString(printElm) {
+    return _arr.slice(1, N + 1).map(printElm);
+  }
+
   return {
     insert,
     delMin,
-    size
+    size,
+    toString
   };
 }
 
