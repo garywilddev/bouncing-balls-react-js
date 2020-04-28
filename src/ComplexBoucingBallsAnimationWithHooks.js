@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import CanvasComponent from "./CanvasComponent";
 import MinPQ from "./MinPQ";
 
@@ -16,21 +16,16 @@ function uniform(a, b) {
   return a + Math.random() * (b - a);
 }
 
-class ComplexBoucingBallsAnimation extends React.Component {
-  constructor(props) {
-    super(props);
+function ComplexBoucingBallsAnimation() {
+  const particlesRef = useRef([]);
+  const rAF = useRef(null);
+  const [particles, setParticles] = useState([]);
+  const pq = useRef(null);
+  const t = useRef(0)
 
-    this.state = {
-      particles: []
-    };
-    this.init = this.init.bind(this);
-    this.predict = this.predict.bind(this);
-    this.simulate = this.simulate.bind(this);
-  }
-
-  componentDidMount() {
-    this.t = 0;
-    this.pq = MinPQ(function compare(
+  useEffect(() => {
+    t.current = 0
+    pq.current = MinPQ(function compare(
       { t: t1, count: count1 },
       { t: t2, count: count2 }
     ) {
@@ -41,20 +36,21 @@ class ComplexBoucingBallsAnimation extends React.Component {
 
       return t1 - t2;
     });
-    this.init();
-    this.rAF = requestAnimationFrame(this.simulate);
-  }
+    init();
+    rAF.current = requestAnimationFrame(simulate);
+    return () => cancelAnimationFrame(rAF.current);
+  }, []);
 
-  isValid({ countA, countB, particles: [a, b] }) {
-    if (a != null && countA !== this.particles[a.index].count) {
+  function isValid({ countA, countB, particles: [a, b] }) {
+    if (a != null && countA !== particlesRef.current[a.index].count) {
       return false;
-    } else if (b != null && countB !== this.particles[b.index].count) {
+    } else if (b != null && countB !== particlesRef.current[b.index].count) {
       return false;
     }
     return true;
   }
 
-  timeToHit(
+  function timeToHit(
     { r: r1, rx: rx1, ry: ry1, vx: vx1, vy: vy1 },
     { r: r2, rx: rx2, ry: ry2, vx: vx2, vy: vy2 }
   ) {
@@ -83,7 +79,7 @@ class ComplexBoucingBallsAnimation extends React.Component {
     return -(dvdr + Math.sqrt(d)) / dvdv;
   }
 
-  timeToHitVWall({ r, rx, vx }) {
+  function timeToHitVWall({ r, rx, vx }) {
     if (vx < 0) {
       return (r - rx) / vx;
     } else if (vx > 0) {
@@ -93,7 +89,7 @@ class ComplexBoucingBallsAnimation extends React.Component {
     return Infinity;
   }
 
-  timeToHitHWall({ r, ry, vy }) {
+  function timeToHitHWall({ r, ry, vy }) {
     if (vy < 0) {
       return (r - ry) / vy;
     } else if (vy > 0) {
@@ -103,11 +99,10 @@ class ComplexBoucingBallsAnimation extends React.Component {
     return Infinity;
   }
 
-  bounceOff(
+  function bounceOff(
     { m: m1, r: r1, rx: rx1, ry: ry1, vx: vx1, vy: vy1, count: count1 },
     { m: m2, r: r2, rx: rx2, ry: ry2, vx: vx2, vy: vy2, count: count2 }
   ) {
-    //debugger;
     const dx = rx2 - rx1;
     const dy = ry2 - ry1;
     const dvx = vx2 - vx1;
@@ -128,31 +123,31 @@ class ComplexBoucingBallsAnimation extends React.Component {
     ];
   }
 
-  bounceOffVWall({ vx, count }) {
+  function bounceOffVWall({ vx, count }) {
     return { vx: -vx, count: count + 1 };
   }
 
-  bounceOffHWall({ vy, count }) {
+  function bounceOffHWall({ vy, count }) {
     return { vy: -vy, count: count + 1 };
   }
 
-  move({ rx, ry, vx, vy }, dt) {
+  function move({ rx, ry, vx, vy }, dt) {
     const _rx = rx + vx * dt;
     const _ry = ry + vy * dt;
 
     return { rx: _rx, ry: _ry };
   }
 
-  predict(a) {
+  function predict(a) {
     if (a == null) {
       return;
     }
 
-    this.particles.forEach(b => {
-      const t = this.t + this.timeToHit(a, b);
-      if (t <= limit) {
-        this.pq.insert({
-          t,
+    particlesRef.current.forEach(b => {
+      const tP = t.current + timeToHit(a, b);
+      if (tP <= limit) {
+        pq.current.insert({
+          t: tP,
           countA: a.count,
           countB: b.count,
           particles: [a, b]
@@ -160,18 +155,18 @@ class ComplexBoucingBallsAnimation extends React.Component {
       }
     });
 
-    const tVW = this.t + this.timeToHitVWall(a);
+    const tVW = t.current + timeToHitVWall(a);
     if (tVW < limit) {
-      this.pq.insert({
+      pq.current.insert({
         t: tVW,
         countA: a.count,
         particles: [a, null]
       });
     }
 
-    const tHW = this.t + this.timeToHitHWall(a);
+    const tHW = t.current + timeToHitHWall(a);
     if (tHW < limit) {
-      this.pq.insert({
+      pq.current.insert({
         t: tHW,
         countB: a.count,
         particles: [null, a]
@@ -179,8 +174,8 @@ class ComplexBoucingBallsAnimation extends React.Component {
     }
   }
 
-  init() {
-    /*this.particles = [
+  function init() {
+    /*particlesRef.current = [
       {
         index: 0,
         r: radius,
@@ -202,7 +197,7 @@ class ComplexBoucingBallsAnimation extends React.Component {
         count: 0
       }
     ];*/
-    this.particles = [...Array(n)].map((val, index) => ({
+    particlesRef.current = [...Array(n)].map((val, index) => ({
       index,
       r: radius,
       m: 0.5,
@@ -212,91 +207,81 @@ class ComplexBoucingBallsAnimation extends React.Component {
       vy: uniform(-0.005, 0.005),
       count: 0
     }));
-    this.particles.forEach(particle => {
-      this.predict(particle);
+    particlesRef.current.forEach(particle => {
+      predict(particle);
     });
-    this.pq.insert({ t: 0, particles: [null, null] });
+    pq.current.insert({ t: 0, particles: [null, null] });
   }
 
-  simulate() {
+  function simulate() {
     /*console.log(
       "size: ",
-      this.pq.size(),
+      pq.current.size(),
       "; content: ",
-      this.pq.toString(e => ({
+      pq.current.toString(e => ({
         time: e.t,
-        isValid: this.isValid(e),
+        isValid: isValid(e),
         a: e.particles[0],
         b: e.particles[1]
       }))
     );*/
-    const event = this.pq.delMin();
+    const event = pq.current.delMin();
     //console.log(JSON.stringify(event));
     if (event) {
-      if (this.isValid(event)) {
+      if (isValid(event)) {
         const {
           t: eventTime,
           particles: [a, b]
         } = event;
 
-        this.particles = this.particles.map(particle => ({
+        particlesRef.current = particlesRef.current.map(particle => ({
           ...particle,
-          ...this.move(particle, eventTime - this.t)
+          ...move(particle, eventTime - t.current)
         }));
 
-        this.t = eventTime;
+        t.current = eventTime;
 
         if (a != null && b != null) {
-          //debugger;
-          const oldA = this.particles[a.index];
-          const oldB = this.particles[b.index];
-          const [_a, _b] = this.bounceOff(oldA, oldB);
-          this.particles.splice(a.index, 1, {
+          const oldA = particlesRef.current[a.index];
+          const oldB = particlesRef.current[b.index];
+          const [_a, _b] = bounceOff(oldA, oldB);
+          particlesRef.current.splice(a.index, 1, {
             ...oldA,
             ..._a
           });
-          this.particles.splice(b.index, 1, {
+          particlesRef.current.splice(b.index, 1, {
             ...oldB,
             ..._b
           });
         } else if (a != null && b == null) {
-          const oldA = this.particles[a.index];
-          const _a = this.bounceOffVWall(oldA);
-          this.particles.splice(a.index, 1, { ...oldA, ..._a });
+          const oldA = particlesRef.current[a.index];
+          const _a = bounceOffVWall(oldA);
+          particlesRef.current.splice(a.index, 1, { ...oldA, ..._a });
         } else if (a == null && b != null) {
-          const oldB = this.particles[b.index];
-          const _b = this.bounceOffHWall(oldB);
-          this.particles.splice(b.index, 1, { ...oldB, ..._b });
+          const oldB = particlesRef.current[b.index];
+          const _b = bounceOffHWall(oldB);
+          particlesRef.current.splice(b.index, 1, { ...oldB, ..._b });
         } else if (a == null && b == null) {
-          this.pq.insert({ t: this.t + 1 / HZ, particles: [null, null] });
-          this.setState({ particles: this.particles });
+          pq.current.insert({ t: eventTime + 1 / HZ, particles: [null, null] });
+          setParticles(particlesRef.current)
           setTimeout(() => {
-            this.rAF = requestAnimationFrame(this.simulate);
+            rAF.current = requestAnimationFrame(simulate);
           }, 20);
           return;
         }
 
         if (a != null) {
-          this.predict(this.particles[a.index]);
+          predict(particlesRef.current[a.index]);
         }
         if (b != null) {
-          this.predict(this.particles[b.index]);
+          predict(particlesRef.current[b.index]);
         }
       }
     }
-    this.rAF = requestAnimationFrame(this.simulate);
+    rAF.current = requestAnimationFrame(simulate);
   }
 
-  componentWillUnmount() {
-    this.t = 0;
-    cancelAnimationFrame(this.rAF);
-  }
-
-  render() {
-    return (
-      <CanvasComponent width={600} height={600} balls={this.state.particles} />
-    );
-  }
+  return <CanvasComponent width={600} height={600} balls={particles} />;
 }
 
 export default ComplexBoucingBallsAnimation;

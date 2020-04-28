@@ -1,5 +1,5 @@
 import React from "react";
-import ComplexBoucingBallsAnimation from "./ComplexBoucingBallsAnimation";
+import ComplexBoucingBallsAnimation from "./ComplexBoucingBallsAnimationWithHooks";
 import "./App.css";
 
 
