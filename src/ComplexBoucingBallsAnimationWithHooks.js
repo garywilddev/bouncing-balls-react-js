@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
-import CanvasComponent from "./CanvasComponent";
+import CanvasComponent from "./CanvasComponentWithHooks";
 import MinPQ from "./MinPQ";
 
 const n = 10;
-const radius = 0.05;
+const radius = 0.010;
 const width = 1;
 const height = 1;
 const HZ = 0.5;
