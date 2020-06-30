@@ -1,12 +1,12 @@
 import React from "react";
-import ComplexBoucingBallsAnimation from "./ComplexBoucingBallsAnimationWithHooks";
+import CollisionSystem from "./CollisionSystem";
 import "./App.css";
 
 
 function App() {
   return (
     <div className="App">
-      <ComplexBoucingBallsAnimation />
+      <CollisionSystem />
     </div>
   );
 }

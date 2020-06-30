@@ -2,8 +2,8 @@ import React, { useRef, useEffect, useState } from "react";
 import CanvasComponent from "./CanvasComponentWithHooks";
 import MinPQ from "./MinPQ";
 
-const n = 10;
-const radius = 0.010;
+const n = 100;
+const radius = 0.01;
 const width = 1;
 const height = 1;
 const HZ = 0.5;
@@ -21,10 +21,12 @@ function ComplexBoucingBallsAnimation() {
   const rAF = useRef(null);
   const [particles, setParticles] = useState([]);
   const pq = useRef(null);
-  const t = useRef(0)
+  const t = useRef(0);
+  const lastTimestamp = useRef(0);
 
   useEffect(() => {
-    t.current = 0
+    lastTimestamp.current = 0;
+    t.current = 0;
     pq.current = MinPQ(function compare(
       { t: t1, count: count1 },
       { t: t2, count: count2 }
@@ -203,8 +205,8 @@ function ComplexBoucingBallsAnimation() {
       m: 0.5,
       rx: uniform(radius, width - radius),
       ry: uniform(radius, height - radius),
-      vx: uniform(-0.005, 0.005),
-      vy: uniform(-0.005, 0.005),
+      vx: uniform(-0.001, 0.001),
+      vy: uniform(-0.001, 0.001),
       count: 0
     }));
     particlesRef.current.forEach(particle => {
@@ -213,7 +215,9 @@ function ComplexBoucingBallsAnimation() {
     pq.current.insert({ t: 0, particles: [null, null] });
   }
 
-  function simulate() {
+  function simulate(timestamp) {
+    console.log("SIMULATE timestamp:", timestamp);
+    console.log("call interval:", timestamp - lastTimestamp.current);
     /*console.log(
       "size: ",
       pq.current.size(),
@@ -263,10 +267,11 @@ function ComplexBoucingBallsAnimation() {
           particlesRef.current.splice(b.index, 1, { ...oldB, ..._b });
         } else if (a == null && b == null) {
           pq.current.insert({ t: eventTime + 1 / HZ, particles: [null, null] });
-          setParticles(particlesRef.current)
+          setParticles(particlesRef.current);
           setTimeout(() => {
             rAF.current = requestAnimationFrame(simulate);
           }, 20);
+          lastTimestamp.current = timestamp;
           return;
         }
 
@@ -279,6 +284,7 @@ function ComplexBoucingBallsAnimation() {
       }
     }
     rAF.current = requestAnimationFrame(simulate);
+    lastTimestamp.current = timestamp;
   }
 
   return <CanvasComponent width={600} height={600} balls={particles} />;
