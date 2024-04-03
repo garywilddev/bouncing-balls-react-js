@@ -1,145 +1,118 @@
-import React from "react";
+import { useEffect, useRef, useState } from "react";
 import MinPQ from "./MinPriorityQueue";
 import Particle from "./Particle";
 import Frame from "./Frame";
 import Event from "./Event";
+import scenarii from "./scenarii";
 
-const n = 10;
-const radius = 0.01;
-const HZ = 0.5;
+const { defaultScenario } = scenarii;
+
+const HZ = 1; // number of redraw events per clock tick
 const simulationTime = 10000;
+const WIDTH = 600;
+const HEIGHT = 600;
 
-function uniform(a, b) {
-  if (!(a < b)) {
-    throw new Error(`invalid range: [ ${a}, ${b} ]`);
-  }
-  return a + Math.random() * (b - a);
+function loadScenario({ scenario, n, rad }) {
+  const particles = scenario.getParticles({ n, rad });
+  return particles.map(
+    ({ index, radius, mass, rx, ry, vx, vy }) =>
+      new Particle({
+        index,
+        radius,
+        mass,
+        rx,
+        ry,
+        vx,
+        vy,
+      })
+  );
 }
 
-export default class ColissionSystem extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      width: 600,
-      height: 600,
-      context: null
-    };
-    this.pq = null;
-    this.t = null;
-    this.frame = null;
-    this.particles = [];
-    this.raf = null;
-  }
+/*const n = 20; // number of particles
+const radius = 0.01; // radius of each particle*/
+export default function CollisionSystem({
+  radius = 0.01,
+  n = 30,
+  scenario = defaultScenario,
+}) {
+  const [isRunning, setIsRunning] = useState(false);
 
-  componentDidMount() {
-    const context = this.refs.canvas.getContext("2d");
-    this.setState({ context: context });
-    this.init(simulationTime);
-    this.raf = requestAnimationFrame(() => {
-      this.simulate(simulationTime);
+  const canvas = useRef();
+  const pq = useRef(null);
+  const t = useRef(null);
+  const frame = useRef(null);
+  const particles = useRef([]);
+  const raf = useRef(null);
+  const context = useRef(null);
+
+  function init(limit) {
+    t.current = 0;
+    pq.current = new MinPQ();
+    frame.current = new Frame({ width: WIDTH, height: HEIGHT });
+    particles.current = loadScenario({ scenario, n, rad: radius });
+    particles.current.forEach((particle) => {
+      predict(particle, limit);
     });
+    pq.current.insert(new Event({ t: 0, a: null, b: null })); // redraw event
+
+    redraw(limit);
   }
 
-  componentWillUnmount() {
-    cancelAnimationFrame(this.raf);
-  }
-
-  init(limit) {
-    debugger;
-    const { width, height } = this.state;
-    this.t = 0;
-    this.pq = new MinPQ();
-    this.frame = new Frame({ width, height });
-    /*this.particles = [
-      new Particle({
-        index: 0,
-        radius,
-        mass: 0.5,
-        rx: 1.0 / 2,
-        ry: 0,
-        vx: 0,
-        vy: 0.002
-      }),
-      new Particle({
-        index: 1,
-        radius,
-        mass: 0.5,
-        rx: 1.0 / 2,
-        ry: 1.0,
-        vx: 0,
-        vy: -0.002
-      })
-    ];*/
-    this.particles = [...Array(n)].map(
-      (val, index) =>
-        new Particle({
-          index,
-          radius,
-          mass: 0.5,
-          rx: uniform(radius, 1.0 - radius),
-          ry: uniform(radius, 1.0 - radius),
-          vx: uniform(-0.001, 0.001),
-          vy: uniform(-0.001, 0.001)
-        })
-    );
-    this.particles.forEach(particle => {
-      this.predict(particle, limit);
-    });
-    this.pq.insert(new Event({ t: 0, a: null, b: null })); // redraw event
-  }
-
-  predict(a, limit) {
+  function predict(a, limit) {
     if (a == null) {
       return;
     }
 
-    this.particles.forEach(b => {
-      const tP = this.t + a.timeToHit(b);
+    particles.current.forEach((b) => {
+      const tP = t.current + a.timeToHit(b);
       if (tP < limit) {
-        this.pq.insert(
+        pq.current.insert(
           new Event({
             t: tP,
             a,
-            b
+            b,
           })
         );
       }
     });
 
-    const tVW = this.t + a.timeToHitVWall();
+    const tVW = t.current + a.timeToHitVWall();
     if (tVW < limit) {
-      this.pq.insert(
+      pq.current.insert(
         new Event({
           t: tVW,
           a,
-          b: null
+          b: null,
         })
       );
     }
 
-    const tHW = this.t + a.timeToHitHWall();
+    const tHW = t.current + a.timeToHitHWall();
     if (tHW < limit) {
-      this.pq.insert(
+      pq.current.insert(
         new Event({
           t: tHW,
           a: null,
-          b: a
+          b: a,
         })
       );
     }
   }
 
-  redraw(limit) {
-    const { context, width, height } = this.state;
-    context.clearRect(0, 0, width, height);
-    this.frame.draw(this.state);
-    this.particles.forEach(particle => particle.draw(this.state));
-    if (this.t < limit) {
-      this.pq.insert(new Event({ t: this.t + 1.0 / HZ, a: null, b: null }));
+  function redraw(limit) {
+    context.current.clearRect(0, 0, WIDTH, HEIGHT);
+    frame.current.draw(context.current);
+    particles.current.forEach((particle) =>
+      particle.draw({ width: WIDTH, height: HEIGHT, context: context.current })
+    );
+    if (t.current < limit) {
+      pq.current.insert(
+        new Event({ t: t.current + 1.0 / HZ, a: null, b: null })
+      );
     }
   }
 
-  simulate(limit) {
+  function simulate(limit) {
     /*console.log(
       "size: ",
       pq.current.size(),
@@ -151,16 +124,18 @@ export default class ColissionSystem extends React.Component {
         b: e.particles[1]
       }))
     );*/
-    const event = this.pq.delMin();
+    const event = pq.current.delMin();
     //console.log(JSON.stringify(event));
     if (event) {
       if (event.isValid()) {
         const a = event.a;
         const b = event.b;
 
-        this.particles.forEach(particle => particle.move(event.t - this.t));
+        particles.current.forEach((particle) =>
+          particle.move(event.t - t.current)
+        );
 
-        this.t = event.t;
+        t.current = event.t;
 
         if (a != null && b != null) {
           a.bounceOff(b);
@@ -169,20 +144,58 @@ export default class ColissionSystem extends React.Component {
         } else if (a == null && b != null) {
           b.bounceOffHWall();
         } else if (a == null && b == null) {
-          this.redraw(limit);
+          redraw(limit);
         }
 
-        this.predict(a, limit);
-        this.predict(b, limit);
+        predict(a, limit);
+        predict(b, limit);
       }
     }
-    this.raf = requestAnimationFrame(() => {
-      this.simulate(limit);
+    raf.current = requestAnimationFrame(() => {
+      simulate(limit);
     });
   }
 
-  render() {
-    const { width, height } = this.state;
-    return <canvas ref="canvas" width={width} height={height} />;
+  useEffect(() => {
+    context.current = canvas.current.getContext("2d");
+    cancelAnimationFrame(raf.current);
+    init(simulationTime);
+    setIsRunning(false);
+
+    return () => {
+      cancelAnimationFrame(raf.current);
+    };
+  }, [scenario, n]);
+
+  function handleStart() {
+    raf.current = requestAnimationFrame(() => {
+      simulate(simulationTime);
+    });
+    setIsRunning(true);
   }
+
+  function handlePause() {
+    cancelAnimationFrame(raf.current);
+    setIsRunning(false);
+  }
+
+  function handleReset() {
+    init(simulationTime);
+    cancelAnimationFrame(raf.current);
+    setIsRunning(false);
+  }
+
+  return (
+    <div>
+      <div>
+        {isRunning ? (
+          <button onClick={handlePause}>Pause</button>
+        ) : (
+          <button onClick={handleStart}>Start</button>
+        )}
+        <button onClick={handleReset}>Reset</button>
+      </div>
+      <canvas ref={canvas} width={WIDTH} height={HEIGHT} />
+    </div>
+  );
 }

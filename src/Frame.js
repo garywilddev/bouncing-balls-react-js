@@ -6,8 +6,7 @@ export default class Frame {
   }
 
 
-  draw(state) {
-    const context = state.context;
+  draw(context) {
     context.save();
     context.beginPath();
     context.moveTo(0, 0);
