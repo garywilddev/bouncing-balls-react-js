@@ -1,9 +1,11 @@
-import { useState } from "react";
-import CollisionSystem from "./CollisionSystem";
-import "./App.css";
-import scenarii from "./scenarii";
+'use client';
 
-const defaultScenarioId = "defaultScenario";
+import { useState } from 'react';
+import CollisionSystem from '../ui/CollisionSystem';
+import './page.css';
+import scenarii from '../scenarii';
+
+const defaultScenarioId = 'defaultScenario';
 const defaultParticlesNb = 20;
 
 function App() {
@@ -45,7 +47,7 @@ function App() {
       <h2>Parameters</h2>
       <label htmlFor="particlesNb">Number of particles (2-50):</label>
       <input
-        disabled={!scenario.parameters?.includes("particlesNb")}
+        disabled={!scenario.parameters?.includes('particlesNb')}
         defaultValue={defaultParticlesNb}
         type="number"
         id="particlesNb"
@@ -53,7 +55,6 @@ function App() {
         min="2"
         max="50"
         onChange={(e) => {
-          console.log("coucou", e.target.value);
           handleChangeParticlesNb(e.target.value);
         }}
       />

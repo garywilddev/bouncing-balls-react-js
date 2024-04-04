@@ -3,16 +3,19 @@ import MinPQ from "./MinPriorityQueue";
 import Particle from "./Particle";
 import Frame from "./Frame";
 import Event from "./Event";
-import scenarii from "./scenarii";
+import scenarii from "../scenarii";
 
 const { defaultScenario } = scenarii;
 
 const HZ = 1; // number of redraw events per clock tick
 const simulationTime = 10000;
 const WIDTH = 600;
+
+
+
 const HEIGHT = 600;
 
-function loadScenario({ scenario, n, rad }) {
+    function loadScenario({ scenario, n, rad }) {
   const particles = scenario.getParticles({ n, rad });
   return particles.map(
     ({ index, radius, mass, rx, ry, vx, vy }) =>
