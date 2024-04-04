@@ -68,7 +68,7 @@ export default class MinPriorityQueue {
     this.sink(1);
     this.pq[this.N + 1] = undefined;
     if (this.N > 0 && this.N === (this.pq.length - 1) / 4) {
-      this.resize(this.pq.length / 2);
+      this.resize(Math.floor(this.pq.length / 2));
     }
     return min;
   }
