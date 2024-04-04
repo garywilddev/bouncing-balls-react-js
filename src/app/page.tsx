@@ -59,6 +59,17 @@ function App() {
         }}
       />
       <CollisionSystem scenario={scenario} particlesNb={particlesNb} />
+      <p>
+        Adapted by <a href="https://garysauvage.com">Gary Sauvage</a> from{' '}
+        <a href="https://algs4.cs.princeton.edu/61event/">
+          the Event-Driven Simulation course
+        </a>{' '}
+        from Robert Sedgewick and Kevin Wayne. This course is part of{' '}
+        <a href="https://algs4.cs.princeton.edu/home/">
+          a great Princeton series of lectures on algorithms
+        </a>
+        .
+      </p>
     </div>
   );
 }
