@@ -1,4 +1,4 @@
-import scenario1 from './scenario1';
+import twoballs from './twoballs';
 import nparticles from './nparticles';
 import brownian from './brownian';
 import diffusion from './diffusion';
@@ -6,7 +6,7 @@ import billards5 from './billards5';
 
 const scenarii = {
   nparticles,
-  scenario1,
+  twoballs,
   brownian,
   diffusion,
   billards5,
