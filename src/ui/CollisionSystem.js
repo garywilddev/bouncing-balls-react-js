@@ -1,42 +1,44 @@
-import { useEffect, useRef, useState } from "react";
-import MinPQ from "./MinPriorityQueue";
-import Particle from "./Particle";
-import Frame from "./Frame";
-import Event from "./Event";
-import scenarii from "../scenarii";
-
-const { defaultScenario } = scenarii;
+import { useEffect, useRef, useState } from 'react';
+import MinPQ from './MinPriorityQueue';
+import Particle from './Particle';
+import Frame from './Frame';
+import Event from './Event';
 
 const HZ = 1; // number of redraw events per clock tick
 const simulationTime = 10000;
 const WIDTH = 600;
-
-
-
 const HEIGHT = 600;
 
-    function loadScenario({ scenario, n, rad }) {
-  const particles = scenario.getParticles({ n, rad });
+function loadScenario({
+  scenario,
+  particlesNb,
+  radius: inputRadius,
+  color: inputColor,
+}) {
+  const particles = scenario.getParticles({
+    particlesNb,
+    radius: inputRadius,
+    color: inputColor,
+  });
   return particles.map(
-    ({ index, radius, mass, rx, ry, vx, vy }) =>
+    ({ index, rx, ry, vx, vy, radius, mass, color }) =>
       new Particle({
         index,
-        radius,
-        mass,
         rx,
         ry,
         vx,
         vy,
-      })
+        radius,
+        mass,
+        color,
+      }),
   );
 }
 
-/*const n = 20; // number of particles
-const radius = 0.01; // radius of each particle*/
 export default function CollisionSystem({
   radius = 0.01,
-  n = 30,
-  scenario = defaultScenario,
+  particlesNb = 30,
+  scenario,
 }) {
   const [isRunning, setIsRunning] = useState(false);
 
@@ -52,7 +54,7 @@ export default function CollisionSystem({
     t.current = 0;
     pq.current = new MinPQ();
     frame.current = new Frame({ width: WIDTH, height: HEIGHT });
-    particles.current = loadScenario({ scenario, n, rad: radius });
+    particles.current = loadScenario({ scenario, particlesNb, radius });
     particles.current.forEach((particle) => {
       predict(particle, limit);
     });
@@ -74,7 +76,7 @@ export default function CollisionSystem({
             t: tP,
             a,
             b,
-          })
+          }),
         );
       }
     });
@@ -86,7 +88,7 @@ export default function CollisionSystem({
           t: tVW,
           a,
           b: null,
-        })
+        }),
       );
     }
 
@@ -97,7 +99,7 @@ export default function CollisionSystem({
           t: tHW,
           a: null,
           b: a,
-        })
+        }),
       );
     }
   }
@@ -106,11 +108,11 @@ export default function CollisionSystem({
     context.current.clearRect(0, 0, WIDTH, HEIGHT);
     frame.current.draw(context.current);
     particles.current.forEach((particle) =>
-      particle.draw({ width: WIDTH, height: HEIGHT, context: context.current })
+      particle.draw({ width: WIDTH, height: HEIGHT, context: context.current }),
     );
     if (t.current < limit) {
       pq.current.insert(
-        new Event({ t: t.current + 1.0 / HZ, a: null, b: null })
+        new Event({ t: t.current + 1.0 / HZ, a: null, b: null }),
       );
     }
   }
@@ -135,7 +137,7 @@ export default function CollisionSystem({
         const b = event.b;
 
         particles.current.forEach((particle) =>
-          particle.move(event.t - t.current)
+          particle.move(event.t - t.current),
         );
 
         t.current = event.t;
@@ -160,7 +162,7 @@ export default function CollisionSystem({
   }
 
   useEffect(() => {
-    context.current = canvas.current.getContext("2d");
+    context.current = canvas.current.getContext('2d');
     cancelAnimationFrame(raf.current);
     init(simulationTime);
     setIsRunning(false);
@@ -168,7 +170,7 @@ export default function CollisionSystem({
     return () => {
       cancelAnimationFrame(raf.current);
     };
-  }, [scenario, n]);
+  }, [scenario, particlesNb]);
 
   function handleStart() {
     raf.current = requestAnimationFrame(() => {

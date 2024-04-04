@@ -5,7 +5,7 @@ import CollisionSystem from '../ui/CollisionSystem';
 import './page.css';
 import scenarii from '../scenarii';
 
-const defaultScenarioId = 'defaultScenario';
+const defaultScenarioId = 'nparticles';
 const defaultParticlesNb = 20;
 
 function App() {
@@ -58,7 +58,18 @@ function App() {
           handleChangeParticlesNb(e.target.value);
         }}
       />
-      <CollisionSystem scenario={scenario} n={particlesNb} />
+      <CollisionSystem scenario={scenario} particlesNb={particlesNb} />
+      <p>
+        Adapted by <a href="https://garysauvage.com">Gary Sauvage</a> from{' '}
+        <a href="https://algs4.cs.princeton.edu/61event/">
+          the Event-Driven Simulation course
+        </a>{' '}
+        from Robert Sedgewick and Kevin Wayne. This course is part of{' '}
+        <a href="https://algs4.cs.princeton.edu/home/">
+          a great Princeton series of lectures on algorithms
+        </a>
+        .
+      </p>
     </div>
   );
 }

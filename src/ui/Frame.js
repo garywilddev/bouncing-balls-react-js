@@ -1,10 +1,9 @@
 export default class Frame {
-  constructor(args) {
-    this.width = args.width;
-    this.height = args.height;
-    this.color = args.color || "#4397AC";
+  constructor({ width, height, color }) {
+    this.width = width;
+    this.height = height;
+    this.color = color || '#4397AC';
   }
-
 
   draw(context) {
     context.save();

@@ -1,9 +1,9 @@
 export default class MinPriorityQueue {
-  constructor(args) {
+  constructor({ compare } = {}) {
     this.pq = [];
     this.N = 0;
-    if (args) {
-      this.compare = args.compare;
+    if (compare) {
+      this.compare = compare;
     }
   }
 

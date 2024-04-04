@@ -1,13 +1,13 @@
 export default class Particle {
-  constructor(args) {
-    this.rx = args.rx;
-    this.ry = args.ry;
-    this.vx = args.vx;
-    this.vy = args.vy;
-    this.radius = args.radius;
-    this.mass = args.mass;
+  constructor({ rx, ry, vx, vy, radius, mass, color }) {
+    this.rx = rx;
+    this.ry = ry;
+    this.vx = vx;
+    this.vy = vy;
+    this.radius = radius;
+    this.mass = mass;
     this.count = 0;
-    this.color = args.color || "#4397AC";
+    this.color = color || '#4397AC';
   }
 
   destroy() {
