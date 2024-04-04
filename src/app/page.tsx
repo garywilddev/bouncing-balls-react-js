@@ -5,7 +5,7 @@ import CollisionSystem from '../ui/CollisionSystem';
 import './page.css';
 import scenarii from '../scenarii';
 
-const defaultScenarioId = 'defaultScenario';
+const defaultScenarioId = 'nparticles';
 const defaultParticlesNb = 20;
 
 function App() {
@@ -58,7 +58,7 @@ function App() {
           handleChangeParticlesNb(e.target.value);
         }}
       />
-      <CollisionSystem scenario={scenario} n={particlesNb} />
+      <CollisionSystem scenario={scenario} particlesNb={particlesNb} />
     </div>
   );
 }

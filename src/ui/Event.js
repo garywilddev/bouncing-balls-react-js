@@ -1,15 +1,15 @@
 export default class Event {
-  constructor(args) {
-    this.t = args.t;
-    this.a = args.a;
-    this.b = args.b;
-    if (args.a != null) {
-      this.countA = args.a.count;
+  constructor({ t, a, b }) {
+    this.t = t;
+    this.a = a;
+    this.b = b;
+    if (a != null) {
+      this.countA = a.count;
     } else {
       this.countA = -1;
     }
-    if (args.b != null) {
-      this.countB = args.b.count;
+    if (b != null) {
+      this.countB = b.count;
     } else {
       this.countB = -1;
     }
