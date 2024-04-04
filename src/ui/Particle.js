@@ -99,8 +99,7 @@ export default class Particle {
     this.count = this.count + 1;
   }
 
-  draw(state) {
-    const { width, height, context } = state;
+  draw({ width, height, context }) {
     context.save();
     context.translate(width * this.rx, height * this.ry);
     context.fillStyle = this.color;
