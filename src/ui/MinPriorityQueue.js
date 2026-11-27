@@ -73,6 +73,11 @@ export default class MinPriorityQueue {
     return min;
   }
 
+  // Peek at the smallest element without removing it.
+  min() {
+    return this.pq[1];
+  }
+
   size() {
     return this.N;
   }
