@@ -1,5 +1,6 @@
 export default class Particle {
-  constructor({ rx, ry, vx, vy, radius, mass, color }) {
+  constructor({ index, rx, ry, vx, vy, radius, mass, color }) {
+    this.index = index;
     this.rx = rx;
     this.ry = ry;
     this.vx = vx;
@@ -99,16 +100,35 @@ export default class Particle {
     this.count = this.count + 1;
   }
 
-  draw({ width, height, context }) {
+  draw({ width, height, context, showIndex }) {
     context.save();
-    context.translate(width * this.rx, height * this.ry);
     context.fillStyle = this.color;
-    context.lineWidth = 2;
+    /*context.lineWidth = 2;
+    context.translate(width * this.rx, height * this.ry);
     context.beginPath();
     context.moveTo(0, -width * this.radius);
     context.arc(0, 0, width * this.radius, 0, 2 * Math.PI);
+    context.closePath();*/
+    context.beginPath();
+    context.ellipse(
+      width * this.rx,
+      height * this.ry,
+      this.radius * width,
+      this.radius * height,
+      0,
+      0,
+      2 * Math.PI,
+    );
     context.closePath();
     context.fill();
+    if (showIndex) {
+      context.fillStyle = 'black';
+      context.fillText(
+        this.index,
+        this.rx - this.radius,
+        this.ry + this.radius,
+      );
+    }
     context.restore();
   }
 }

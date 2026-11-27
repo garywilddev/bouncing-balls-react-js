@@ -5,7 +5,7 @@ import Frame from './Frame';
 import Event from './Event';
 
 const HZ = 1; // number of redraw events per clock tick
-const simulationTime = 10000;
+const simulationTime = 1000;
 const WIDTH = 600;
 const HEIGHT = 600;
 
@@ -21,13 +21,13 @@ function loadScenario({
     color: inputColor,
   });
   return particles.map(
-    ({ index, rx, ry, vx, vy, radius, mass, color }) =>
+    ({ index, rx, ry, vx, vy, radius, mass, color }, idx) =>
       new Particle({
-        index,
+        index: index || idx,
         rx,
         ry,
-        vx,
-        vy,
+        vx: vx * 1,
+        vy: vy * 1,
         radius,
         mass,
         color,
@@ -39,6 +39,7 @@ export default function CollisionSystem({
   radius = 0.01,
   particlesNb = 30,
   scenario,
+  debug = false,
 }) {
   const [isRunning, setIsRunning] = useState(false);
 
@@ -59,6 +60,7 @@ export default function CollisionSystem({
       predict(particle, limit);
     });
     pq.current.insert(new Event({ t: 0, a: null, b: null })); // redraw event
+    pq.current.isEmpty();
 
     redraw(limit);
   }
@@ -104,35 +106,109 @@ export default function CollisionSystem({
     }
   }
 
+  function drawParticles({ particles, context, width, height }) {
+    particles.map((particle) => {
+      context.fillStyle = particle.color;
+      /*context.lineWidth = 2;
+    context.translate(width * particle.rx, height * particle.ry);
+    context.beginPath();
+    context.moveTo(0, -width * particle.radius);
+    context.arc(0, 0, width * particle.radius, 0, 2 * Math.PI);
+    context.closePath();*/
+      context.beginPath();
+      context.ellipse(
+        width * particle.rx,
+        height * particle.ry,
+        particle.radius * width,
+        particle.radius * height,
+        0,
+        0,
+        2 * Math.PI,
+      );
+      context.closePath();
+      context.fill();
+      if (debug) {
+        context.fillStyle = 'black';
+        context.fillText(
+          particle.index,
+          particle.rx - particle.radius,
+          particle.ry + particle.radius,
+        );
+      }
+    });
+  }
+
   function redraw(limit) {
     context.current.clearRect(0, 0, WIDTH, HEIGHT);
     frame.current.draw(context.current);
-    particles.current.forEach((particle) =>
-      particle.draw({ width: WIDTH, height: HEIGHT, context: context.current }),
-    );
+    drawParticles({
+      particles: particles.current,
+      context: context.current,
+      width: WIDTH,
+      height: HEIGHT,
+    });
+    /*particles.current.forEach((particle) =>
+      particle.draw({
+        width: WIDTH,
+        height: HEIGHT,
+        context: context.current,
+        showIndex: debug,
+      }),
+    );*/
+
     if (t.current < limit) {
-      pq.current.insert(
-        new Event({ t: t.current + 1.0 / HZ, a: null, b: null }),
-      );
+      /*console.log({ t: t.current, limit });*/
+      pq.current.insert(new Event({ t: t.current + 1 / HZ, a: null, b: null }));
+    } else {
+      reset()
     }
   }
 
+  function reset() {
+    cancelAnimationFrame(raf.current);
+    init(simulationTime);
+    setIsRunning(false);
+  }
+
+  function start() {
+    raf.current = requestAnimationFrame(() => {
+      simulate(simulationTime);
+    });
+    setIsRunning(true);
+  }
+
+  function pause() {
+    cancelAnimationFrame(raf.current);
+    setIsRunning(false);
+  }
+
   function simulate(limit) {
-    /*console.log(
-      "size: ",
-      pq.current.size(),
-      "; content: ",
-      pq.current.toString(e => ({
-        time: e.t,
-        isValid: isValid(e),
-        a: e.particles[0],
-        b: e.particles[1]
-      }))
-    );*/
-    const event = pq.current.delMin();
-    //console.log(JSON.stringify(event));
-    if (event) {
-      if (event.isValid()) {
+    /*console.log('simulate');*/
+    performance.mark('start');
+    // We schedule a new requestAnimationFrame before performing our loop contents. That is not by accident and it is considered best practice
+    raf.current = requestAnimationFrame(() => {
+      simulate(limit);
+    });
+
+    if (debug) {
+      /*console.log(
+        'size: ',
+        pq.current.size(),
+        '; content: ',
+        pq.current.toString((e) => ({
+          time: e.t,
+          isValid: e.isValid(),
+          a: e.a,
+          b: e.b,
+        })),
+      );*/
+    }
+
+    if (!pq.current?.isEmpty()) {
+      const event = pq.current.delMin();
+
+      //console.log(JSON.stringify(event));
+      if (event?.isValid()) {
         const a = event.a;
         const b = event.b;
 
@@ -155,17 +231,15 @@ export default function CollisionSystem({
         predict(a, limit);
         predict(b, limit);
       }
+    } else {
+      pause();
     }
-    raf.current = requestAnimationFrame(() => {
-      simulate(limit);
-    });
+    performance.measure('simulate', 'start');
   }
 
   useEffect(() => {
     context.current = canvas.current.getContext('2d');
-    cancelAnimationFrame(raf.current);
-    init(simulationTime);
-    setIsRunning(false);
+    reset();
 
     return () => {
       cancelAnimationFrame(raf.current);
@@ -173,21 +247,15 @@ export default function CollisionSystem({
   }, [scenario, particlesNb]);
 
   function handleStart() {
-    raf.current = requestAnimationFrame(() => {
-      simulate(simulationTime);
-    });
-    setIsRunning(true);
+    start();
   }
 
   function handlePause() {
-    cancelAnimationFrame(raf.current);
-    setIsRunning(false);
+    pause();
   }
 
   function handleReset() {
-    init(simulationTime);
-    cancelAnimationFrame(raf.current);
-    setIsRunning(false);
+    reset();
   }
 
   return (

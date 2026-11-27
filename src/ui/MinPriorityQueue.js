@@ -77,6 +77,10 @@ export default class MinPriorityQueue {
     return this.N;
   }
 
+  isEmpty() {
+    return this.N <= 0;
+  }
+
   toString(printElm) {
     return this.pq.slice(1, this.N + 1).map(printElm);
   }
