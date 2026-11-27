@@ -25,7 +25,7 @@ export default class Event {
   }
 
   compareTo(that) {
-    const delta = 10 ^ -3;
+    const delta = 1.0e-3;
     if (Math.abs(this.t - that.t) < delta) {
       return 0;
     }
