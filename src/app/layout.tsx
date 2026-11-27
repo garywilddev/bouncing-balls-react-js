@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "React App",
   description: "Web site created with Next.js.",
+  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/manifest.json`,
 };
 
 export default function RootLayout({
