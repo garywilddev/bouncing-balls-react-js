@@ -9,6 +9,9 @@ const SIM_SPEED = 30;
 // Cap on the wall-clock time handled by one frame (e.g. after a tab switch),
 // so the simulation never jumps ahead.
 const MAX_FRAME_SECONDS = 0.1;
+// Safety net against runaway event cascades: never process more than this
+// many events in one animation frame.
+const MAX_EVENTS_PER_FRAME = 100000;
 const simulationTime = 1000;
 const WIDTH = 600;
 const HEIGHT = 600;
@@ -125,7 +128,13 @@ export default function CollisionSystem({
   // `target`. One call per animation frame, so each frame shows the exact
   // physical state at that instant, however many collisions happened.
   function advanceTo(target, limit) {
+    let processed = 0;
     while (!pq.current.isEmpty() && pq.current.min().t <= target) {
+      if (++processed > MAX_EVENTS_PER_FRAME) {
+        // Too much work for one frame: stop here and let the next frame
+        // carry on from the last processed event instead of freezing the tab.
+        return;
+      }
       const event = pq.current.delMin();
       if (!event.isValid()) {
         continue;
