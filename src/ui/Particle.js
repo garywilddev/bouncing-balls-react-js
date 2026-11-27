@@ -42,6 +42,12 @@ export default class Particle {
     }
     const drdr = dx * dx + dy * dy;
     const sigma = this.radius + that.radius;
+    if (drdr < sigma * sigma) {
+      // Already overlapping (bad initial state or floating-point drift): the
+      // formula below would return a negative time, i.e. a collision in the
+      // past that re-triggers forever. Let the pair drift apart instead.
+      return Infinity;
+    }
     const d = dvdr * dvdr - dvdv * (drdr - sigma * sigma);
 
     if (d < 0) {
