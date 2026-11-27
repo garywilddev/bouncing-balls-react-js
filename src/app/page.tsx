@@ -65,7 +65,7 @@ function App() {
       <h2>Description</h2>
       <p>{scenario.description}</p>
       <h2>Parameters</h2>
-      <label htmlFor="particlesNb">Number of particles (2-50):</label>
+      <label htmlFor="particlesNb">Number of particles (2-500):</label>
       <input
         disabled={!scenario.parameters?.includes('particlesNb')}
         defaultValue={defaultParticlesNb}
@@ -73,7 +73,7 @@ function App() {
         id="particlesNb"
         name="particlesNb"
         min="2"
-        max="50"
+        max="500"
         onChange={(e) => {
           handleChangeParticlesNb(e.target.value);
         }}
